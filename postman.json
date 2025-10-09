@@ -1,0 +1,331 @@
+{
+    "info": {
+        "_postman_id": "12345678-1234-1234-1234-123456789012",
+        "name": "Coinrade AI Wallet Backend",
+        "description": "API collection for testing Coinrade AI Wallet Assistant backend services",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "12345678"
+    },
+    "item": [
+        {
+            "name": "Health Check",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Check if the backend server is running and healthy"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Price API",
+            "item": [
+                {
+                    "name": "Get SOL Price",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/prices/sol",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prices",
+                                "sol"
+                            ]
+                        },
+                        "description": "Get current SOL price in USD"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Multiple Token Prices",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"addresses\": [\n    \"So11111111111111111111111111111111111111112\",\n    \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n    \"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB\"\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/prices/tokens",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prices",
+                                "tokens"
+                            ]
+                        },
+                        "description": "Get prices for multiple tokens by their mint addresses. Example includes SOL, USDC, and USDT."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Single Token Price",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/prices/token/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prices",
+                                "token",
+                                "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+                            ]
+                        },
+                        "description": "Get price for a single token by mint address (USDC example)"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Wallet API",
+            "item": [
+                {
+                    "name": "Validate Wallet Address",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/validate/{{walletAddress}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "validate",
+                                "{{walletAddress}}"
+                            ]
+                        },
+                        "description": "Validate if a wallet address is in correct Solana format"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Wallet Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/info/{{walletAddress}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "info",
+                                "{{walletAddress}}"
+                            ]
+                        },
+                        "description": "Get wallet information including SOL balance and activity status"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Wallet Transactions",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/transactions/{{walletAddress}}?limit=50",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "transactions",
+                                "{{walletAddress}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50",
+                                    "description": "Number of transactions to fetch (default: 100)"
+                                }
+                            ]
+                        },
+                        "description": "Get wallet transaction history with optional limit"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Wallet Tokens",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/tokens/{{walletAddress}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "tokens",
+                                "{{walletAddress}}"
+                            ]
+                        },
+                        "description": "Get all token balances for a wallet"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "AI API",
+            "item": [
+                {
+                    "name": "Generate AI Chat Response",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"prompt\": \"What's my portfolio worth?\",\n  \"walletData\": {\n    \"address\": \"{{walletAddress}}\",\n    \"balance\": 1.5,\n    \"tokens\": [\n      {\n        \"mint\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n        \"symbol\": \"USDC\",\n        \"name\": \"USD Coin\",\n        \"amount\": 100,\n        \"decimals\": 6,\n        \"usdValue\": 100\n      }\n    ],\n    \"transactions\": [],\n    \"analytics\": {\n      \"totalValue\": 250.5,\n      \"transactionCount\": 15,\n      \"totalFeesPaid\": 0.05,\n      \"mostActiveToken\": \"SOL\",\n      \"averageTransactionSize\": 0.1\n    },\n    \"solPriceUSD\": 150.5\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/chat",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "chat"
+                            ]
+                        },
+                        "description": "Generate AI response based on user prompt and wallet data"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Process Natural Language Query",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"Show me my recent transactions\",\n  \"context\": {\n    \"walletAddress\": \"{{walletAddress}}\",\n    \"previousQueries\": [\"What's my balance?\"],\n    \"walletDataSnapshot\": {\n      \"address\": \"{{walletAddress}}\",\n      \"balance\": 1.5,\n      \"tokens\": [\n        {\n          \"mint\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n          \"symbol\": \"USDC\",\n          \"name\": \"USD Coin\",\n          \"amount\": 100,\n          \"decimals\": 6,\n          \"usdValue\": 100\n        }\n      ],\n      \"transactions\": [\n        {\n          \"signature\": \"5j7s...\",\n          \"timestamp\": 1640995200000,\n          \"type\": \"transfer-in\",\n          \"amount\": 0.5,\n          \"fee\": 0.000005,\n          \"status\": \"success\",\n          \"involvedAddresses\": []\n        }\n      ],\n      \"analytics\": {\n        \"totalValue\": 250.5,\n        \"transactionCount\": 15,\n        \"totalFeesPaid\": 0.05,\n        \"mostActiveToken\": \"SOL\",\n        \"averageTransactionSize\": 0.1\n      },\n      \"solPriceUSD\": 150.5\n    },\n    \"conversationHistory\": [\n      {\n        \"role\": \"user\",\n        \"content\": \"What's my balance?\",\n        \"timestamp\": 1640995200000\n      }\n    ],\n    \"sessionId\": \"session-123\",\n    \"createdAt\": 1640995200000,\n    \"lastUpdated\": 1640995200000,\n    \"messageCount\": 1,\n    \"contextWindow\": 10\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/query",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "query"
+                            ]
+                        },
+                        "description": "Process natural language query with conversation context"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Validate Query",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"query\": \"What's my portfolio worth?\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/validate",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "validate"
+                            ]
+                        },
+                        "description": "Validate if a query is appropriate for wallet analysis"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    ""
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3001",
+            "type": "string",
+            "description": "Backend server base URL"
+        },
+        {
+            "key": "walletAddress",
+            "value": "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
+            "type": "string",
+            "description": "Example Solana wallet address for testing"
+        }
+    ]
+}
