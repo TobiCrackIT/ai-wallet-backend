@@ -1,35 +1,12 @@
 {
     "info": {
-        "_postman_id": "12345678-1234-1234-1234-123456789012",
-        "name": "Coinrade AI Wallet Backend",
-        "description": "API collection for testing Coinrade AI Wallet Assistant backend services",
+        "_postman_id": "coinrade-ai-wallet-api",
+        "name": "Coinrade AI Wallet API",
+        "description": "Complete API collection for the Coinrade AI Wallet backend service. Includes endpoints for price data, wallet information, and AI chat functionality.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-        "_exporter_id": "12345678"
+        "_exporter_id": "coinrade-ai-wallet"
     },
     "item": [
-        {
-            "name": "Health Check",
-            "item": [
-                {
-                    "name": "Health Check",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{baseUrl}}/health",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "health"
-                            ]
-                        },
-                        "description": "Check if the backend server is running and healthy"
-                    },
-                    "response": []
-                }
-            ]
-        },
         {
             "name": "Price API",
             "item": [
@@ -49,12 +26,12 @@
                                 "sol"
                             ]
                         },
-                        "description": "Get current SOL price in USD"
+                        "description": "Get current Solana (SOL) price in USD"
                     },
                     "response": []
                 },
                 {
-                    "name": "Get Multiple Token Prices",
+                    "name": "Get Token Prices (Multiple)",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -65,7 +42,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"addresses\": [\n    \"So11111111111111111111111111111111111111112\",\n    \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n    \"Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB\"\n  ]\n}"
+                            "raw": "{\n  \"addresses\": [\n    \"So11111111111111111111111111111111111111112\",\n    \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n    \"4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R\"\n  ],\n  \"network\": \"solana\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/prices/tokens",
@@ -78,7 +55,7 @@
                                 "tokens"
                             ]
                         },
-                        "description": "Get prices for multiple tokens by their mint addresses. Example includes SOL, USDC, and USDT."
+                        "description": "Get prices for multiple tokens by their addresses"
                     },
                     "response": []
                 },
@@ -88,7 +65,7 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/api/prices/token/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                            "raw": "{{baseUrl}}/api/prices/token/So11111111111111111111111111111111111111112?network=solana",
                             "host": [
                                 "{{baseUrl}}"
                             ],
@@ -96,116 +73,21 @@
                                 "api",
                                 "prices",
                                 "token",
-                                "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-                            ]
-                        },
-                        "description": "Get price for a single token by mint address (USDC example)"
-                    },
-                    "response": []
-                }
-            ]
-        },
-        {
-            "name": "Wallet API",
-            "item": [
-                {
-                    "name": "Validate Wallet Address",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{baseUrl}}/api/wallet/validate/{{walletAddress}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "wallet",
-                                "validate",
-                                "{{walletAddress}}"
-                            ]
-                        },
-                        "description": "Validate if a wallet address is in correct Solana format"
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Wallet Info",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{baseUrl}}/api/wallet/info/{{walletAddress}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "wallet",
-                                "info",
-                                "{{walletAddress}}"
-                            ]
-                        },
-                        "description": "Get wallet information including SOL balance and activity status"
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Wallet Transactions",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{baseUrl}}/api/wallet/transactions/{{walletAddress}}?limit=50",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "wallet",
-                                "transactions",
-                                "{{walletAddress}}"
+                                "So11111111111111111111111111111111111111112"
                             ],
                             "query": [
                                 {
-                                    "key": "limit",
-                                    "value": "50",
-                                    "description": "Number of transactions to fetch (default: 100)"
+                                    "key": "network",
+                                    "value": "solana"
                                 }
                             ]
                         },
-                        "description": "Get wallet transaction history with optional limit"
+                        "description": "Get price for a single token by address with optional network parameter"
                     },
                     "response": []
                 },
                 {
-                    "name": "Get Wallet Tokens",
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{baseUrl}}/api/wallet/tokens/{{walletAddress}}",
-                            "host": [
-                                "{{baseUrl}}"
-                            ],
-                            "path": [
-                                "api",
-                                "wallet",
-                                "tokens",
-                                "{{walletAddress}}"
-                            ]
-                        },
-                        "description": "Get all token balances for a wallet"
-                    },
-                    "response": []
-                }
-            ]
-        },
-        {
-            "name": "AI API",
-            "item": [
-                {
-                    "name": "Generate AI Chat Response",
+                    "name": "Get Token Prices by Network",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -216,7 +98,210 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"prompt\": \"What's my portfolio worth?\",\n  \"walletData\": {\n    \"address\": \"{{walletAddress}}\",\n    \"balance\": 1.5,\n    \"tokens\": [\n      {\n        \"mint\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n        \"symbol\": \"USDC\",\n        \"name\": \"USD Coin\",\n        \"amount\": 100,\n        \"decimals\": 6,\n        \"usdValue\": 100\n      }\n    ],\n    \"transactions\": [],\n    \"analytics\": {\n      \"totalValue\": 250.5,\n      \"transactionCount\": 15,\n      \"totalFeesPaid\": 0.05,\n      \"mostActiveToken\": \"SOL\",\n      \"averageTransactionSize\": 0.1\n    },\n    \"solPriceUSD\": 150.5\n  }\n}"
+                            "raw": "{\n  \"addresses\": [\n    \"0x4200000000000000000000000000000000000006\",\n    \"0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913\",\n    \"0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed\"\n  ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/prices/tokens/base",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prices",
+                                "tokens",
+                                "base"
+                            ]
+                        },
+                        "description": "Get prices for multiple tokens on a specific network (Base example)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Single Token Price by Network",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/prices/token/base/0x4200000000000000000000000000000000000006",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prices",
+                                "token",
+                                "base",
+                                "0x4200000000000000000000000000000000000006"
+                            ]
+                        },
+                        "description": "Get price for a single token on a specific network (Base WETH example)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Token Data (Comprehensive)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/prices/data/So11111111111111111111111111111111111111112?network=solana",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prices",
+                                "data",
+                                "So11111111111111111111111111111111111111112"
+                            ],
+                            "query": [
+                                {
+                                    "key": "network",
+                                    "value": "solana"
+                                }
+                            ]
+                        },
+                        "description": "Get comprehensive token data including price, market cap, volume, and metadata"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Token Data by Network",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/prices/data/base/0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "prices",
+                                "data",
+                                "base",
+                                "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed"
+                            ]
+                        },
+                        "description": "Get comprehensive token data for a specific network (Base DEGEN example)"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Price-related API endpoints using CoinGecko service"
+        },
+        {
+            "name": "Wallet API",
+            "item": [
+                {
+                    "name": "Validate Wallet Address",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/validate/9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "validate",
+                                "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+                            ]
+                        },
+                        "description": "Validate if a wallet address is properly formatted"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Wallet Info",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/info/9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "info",
+                                "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+                            ]
+                        },
+                        "description": "Get wallet information including balance and activity status"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Wallet Transactions",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/transactions/9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM?limit=50",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "transactions",
+                                "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "50"
+                                }
+                            ]
+                        },
+                        "description": "Get wallet transaction history with optional limit parameter"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Wallet Tokens",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/wallet/tokens/9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "wallet",
+                                "tokens",
+                                "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+                            ]
+                        },
+                        "description": "Get all tokens held in the wallet"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Wallet-related API endpoints using Helius service"
+        },
+        {
+            "name": "AI API",
+            "item": [
+                {
+                    "name": "AI Chat",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"prompt\": \"What is my portfolio worth?\",\n  \"walletData\": {\n    \"address\": \"9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM\",\n    \"balance\": 2.5,\n    \"tokens\": [\n      {\n        \"mint\": \"So11111111111111111111111111111111111111112\",\n        \"symbol\": \"SOL\",\n        \"balance\": 2.5,\n        \"decimals\": 9,\n        \"uiAmount\": 2.5\n      },\n      {\n        \"mint\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n        \"symbol\": \"USDC\",\n        \"balance\": 100,\n        \"decimals\": 6,\n        \"uiAmount\": 100\n      }\n    ],\n    \"transactions\": [],\n    \"totalValue\": 350.75\n  }\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/ai/chat",
@@ -229,7 +314,7 @@
                                 "chat"
                             ]
                         },
-                        "description": "Generate AI response based on user prompt and wallet data"
+                        "description": "Generate AI response based on wallet data and user prompt"
                     },
                     "response": []
                 },
@@ -245,7 +330,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"query\": \"Show me my recent transactions\",\n  \"context\": {\n    \"walletAddress\": \"{{walletAddress}}\",\n    \"previousQueries\": [\"What's my balance?\"],\n    \"walletDataSnapshot\": {\n      \"address\": \"{{walletAddress}}\",\n      \"balance\": 1.5,\n      \"tokens\": [\n        {\n          \"mint\": \"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\",\n          \"symbol\": \"USDC\",\n          \"name\": \"USD Coin\",\n          \"amount\": 100,\n          \"decimals\": 6,\n          \"usdValue\": 100\n        }\n      ],\n      \"transactions\": [\n        {\n          \"signature\": \"5j7s...\",\n          \"timestamp\": 1640995200000,\n          \"type\": \"transfer-in\",\n          \"amount\": 0.5,\n          \"fee\": 0.000005,\n          \"status\": \"success\",\n          \"involvedAddresses\": []\n        }\n      ],\n      \"analytics\": {\n        \"totalValue\": 250.5,\n        \"transactionCount\": 15,\n        \"totalFeesPaid\": 0.05,\n        \"mostActiveToken\": \"SOL\",\n        \"averageTransactionSize\": 0.1\n      },\n      \"solPriceUSD\": 150.5\n    },\n    \"conversationHistory\": [\n      {\n        \"role\": \"user\",\n        \"content\": \"What's my balance?\",\n        \"timestamp\": 1640995200000\n      }\n    ],\n    \"sessionId\": \"session-123\",\n    \"createdAt\": 1640995200000,\n    \"lastUpdated\": 1640995200000,\n    \"messageCount\": 1,\n    \"contextWindow\": 10\n  }\n}"
+                            "raw": "{\n  \"query\": \"Show me my biggest gains this month\",\n  \"context\": {\n    \"conversationHistory\": [\n      {\n        \"role\": \"user\",\n        \"content\": \"What is my portfolio worth?\",\n        \"timestamp\": \"2024-01-15T10:00:00Z\"\n      },\n      {\n        \"role\": \"assistant\",\n        \"content\": \"Your portfolio is worth $350.75\",\n        \"timestamp\": \"2024-01-15T10:00:01Z\"\n      }\n    ],\n    \"walletDataSnapshot\": {\n      \"address\": \"9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM\",\n      \"balance\": 2.5,\n      \"totalValue\": 350.75,\n      \"tokenCount\": 2\n    },\n    \"userPreferences\": {\n      \"currency\": \"USD\",\n      \"riskTolerance\": \"moderate\"\n    }\n  }\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/ai/query",
@@ -274,7 +359,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"query\": \"What's my portfolio worth?\"\n}"
+                            "raw": "{\n  \"query\": \"What is my portfolio performance?\"\n}"
                         },
                         "url": {
                             "raw": "{{baseUrl}}/api/ai/validate",
@@ -287,11 +372,36 @@
                                 "validate"
                             ]
                         },
-                        "description": "Validate if a query is appropriate for wallet analysis"
+                        "description": "Validate if a query is appropriate and safe for processing"
                     },
                     "response": []
                 }
-            ]
+            ],
+            "description": "AI-related API endpoints using OpenAI service"
+        },
+        {
+            "name": "Health Check",
+            "item": [
+                {
+                    "name": "API Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Check if the API server is running and healthy"
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Health check endpoints"
         }
     ],
     "event": [
@@ -319,13 +429,49 @@
             "key": "baseUrl",
             "value": "http://localhost:3001",
             "type": "string",
-            "description": "Backend server base URL"
+            "description": "Base URL for the Coinrade AI Wallet API"
         },
         {
-            "key": "walletAddress",
-            "value": "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
+            "key": "productionUrl",
+            "value": "https://your-production-domain.com",
             "type": "string",
-            "description": "Example Solana wallet address for testing"
+            "description": "Production URL for the Coinrade AI Wallet API"
+        },
+        {
+            "key": "testWalletAddress",
+            "value": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+            "type": "string",
+            "description": "Test Solana wallet address for API testing"
+        },
+        {
+            "key": "solMintAddress",
+            "value": "So11111111111111111111111111111111111111112",
+            "type": "string",
+            "description": "SOL token mint address"
+        },
+        {
+            "key": "usdcMintAddress",
+            "value": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "type": "string",
+            "description": "USDC token mint address on Solana"
+        },
+        {
+            "key": "baseWethAddress",
+            "value": "0x4200000000000000000000000000000000000006",
+            "type": "string",
+            "description": "WETH token address on Base network"
+        },
+        {
+            "key": "baseUsdcAddress",
+            "value": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "type": "string",
+            "description": "USDC token address on Base network"
+        },
+        {
+            "key": "baseDegenAddress",
+            "value": "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed",
+            "type": "string",
+            "description": "DEGEN token address on Base network"
         }
     ]
 }

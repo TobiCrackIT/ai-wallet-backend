@@ -3,7 +3,8 @@
  * Provides methods for fetching cryptocurrency price data
  */
 
-import type { CoinGeckoService } from '../types/api.js';
+import type { CoinGeckoService, TokenData } from '../types/api.js';
+import { TokenRegistry } from './tokenRegistry.js';
 
 export class CoinGeckoAPIService implements CoinGeckoService {
     private readonly baseUrl: string;
@@ -11,6 +12,7 @@ export class CoinGeckoAPIService implements CoinGeckoService {
     private readonly requestCache: Map<string, { data: any; timestamp: number }>;
     private readonly cacheTimeout: number = 60000; // 1 minute cache
     private readonly apiHeader: string = 'X-CG-Demo-API-Key';
+    private readonly network: string = 'solana';
 
     constructor(apiKey?: string) {
         this.apiKey = apiKey || process.env.COINGECKO_API_KEY || '';
@@ -19,9 +21,11 @@ export class CoinGeckoAPIService implements CoinGeckoService {
     }
 
     /**
-     * Fetches current prices for multiple tokens using Solana mint addresses
+     * Fetches current prices for multiple tokens using mint addresses
+     * @param tokenAddresses - Array of token mint addresses
+     * @param network - Blockchain network (default: 'solana')
      */
-    async getTokenPrices(tokenAddresses: string[]): Promise<Record<string, number>> {
+    async getTokenPrices(tokenAddresses: string[], network: string = 'solana'): Promise<Record<string, number>> {
         if (!tokenAddresses || tokenAddresses.length === 0) {
             return {};
         }
@@ -44,7 +48,7 @@ export class CoinGeckoAPIService implements CoinGeckoService {
 
             // Handle stablecoins first - they always have a price of $1
             let priceMap: Record<string, number> = {};
-            const stablecoins = this.getStablecoinAddresses();
+            const stablecoins = TokenRegistry.getStablecoinAddresses(network);
 
             for (const address of validAddresses) {
                 if (stablecoins.includes(address)) {
@@ -67,7 +71,7 @@ export class CoinGeckoAPIService implements CoinGeckoService {
             try {
                 // Try the onchain API
                 const addressesParam = nonStablecoinAddresses.join(',');
-                const onchainUrl = `${this.baseUrl}/onchain/networks/solana/tokens/multi/${addressesParam}`;
+                const onchainUrl = `${this.baseUrl}/onchain/networks/${network}/tokens/multi/${addressesParam}`;
 
                 const headers: HeadersInit = {
                     'Accept': 'application/json',
@@ -77,7 +81,7 @@ export class CoinGeckoAPIService implements CoinGeckoService {
                     headers[this.apiHeader] = this.apiKey;
                 }
 
-                console.log('🔍 Trying onchain API for Solana tokens:', nonStablecoinAddresses.slice(0, 3), nonStablecoinAddresses.length > 3 ? `... and ${nonStablecoinAddresses.length - 3} more` : '');
+                console.log(`🔍 Trying onchain API for ${network} tokens:`, nonStablecoinAddresses.slice(0, 3), nonStablecoinAddresses.length > 3 ? `... and ${nonStablecoinAddresses.length - 3} more` : '');
 
                 const response = await fetch(onchainUrl, { headers });
 
@@ -101,7 +105,7 @@ export class CoinGeckoAPIService implements CoinGeckoService {
             }
 
             // Fallback: Use simple price API for known tokens
-            const knownTokens = this.getKnownTokenMapping();
+            const knownTokens = TokenRegistry.getKnownTokenMapping(network);
             const unmappedAddresses = nonStablecoinAddresses.filter(addr => !priceMap[addr]);
 
             if (unmappedAddresses.length > 0) {
@@ -200,15 +204,173 @@ export class CoinGeckoAPIService implements CoinGeckoService {
     }
 
     /**
-     * Fetches price for a single token using its Solana mint address
+     * Fetches price for a single token using its mint address
+     * @param tokenAddress - Token mint address
+     * @param network - Blockchain network (default: 'solana')
      */
-    async getTokenPrice(tokenAddress: string): Promise<number> {
+    async getTokenPrice(tokenAddress: string, network: string = 'solana'): Promise<number> {
         try {
-            const prices = await this.getTokenPrices([tokenAddress]);
+            const prices = await this.getTokenPrices([tokenAddress], network);
             return prices[tokenAddress] || 0;
         } catch (error) {
-            console.error(`Error fetching price for token ${tokenAddress}:`, error);
+            console.error(`Error fetching price for token ${tokenAddress} on ${network}:`, error);
             return 0;
+        }
+    }
+
+    /**
+     * Fetches comprehensive token data including price, market cap, volume, and metadata
+     * @param tokenAddress - Token contract address
+     * @param network - Blockchain network (default: 'solana')
+     */
+    async getTokenData(tokenAddress: string, network: string = 'solana'): Promise<TokenData | null> {
+        if (!tokenAddress || tokenAddress.length === 0) {
+            return null;
+        }
+
+        try {
+            const cacheKey = `token_data_${network}_${tokenAddress}`;
+            const cached = this.getCachedData(cacheKey);
+
+            if (cached) {
+                return cached;
+            }
+
+            // Initialize token data with basic info
+            const tokenData: TokenData = {
+                address: tokenAddress,
+                network: network.toLowerCase()
+            };
+
+            // Check if it's a stablecoin first
+            if (TokenRegistry.isStablecoin(tokenAddress, network)) {
+                const stablecoinMetadata = TokenRegistry.getStablecoinMetadata(network);
+                const metadata = stablecoinMetadata.find(s => s.address === tokenAddress);
+
+                tokenData.price_usd = 1.0;
+                tokenData.symbol = metadata?.symbol || 'STABLECOIN';
+                tokenData.name = metadata?.name || 'Stablecoin';
+                tokenData.decimals = metadata?.decimals || 6;
+
+                this.setCachedData(cacheKey, tokenData);
+                return tokenData;
+            }
+
+            // Try onchain API first for comprehensive data
+            try {
+                const onchainUrl = `${this.baseUrl}/onchain/networks/${network}/tokens/${tokenAddress}`;
+                const headers: HeadersInit = { 'Accept': 'application/json' };
+
+                if (this.apiKey) {
+                    headers[this.apiHeader] = this.apiKey;
+                }
+
+                console.log(`🔍 Fetching token data for ${tokenAddress} on ${network}`);
+
+                const response = await fetch(onchainUrl, { headers });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.data && data.data.attributes) {
+                        const attrs = data.data.attributes;
+
+                        // Map onchain API response to our TokenData interface
+                        tokenData.name = attrs.name;
+                        tokenData.symbol = attrs.symbol;
+                        if (attrs.decimals !== undefined) tokenData.decimals = attrs.decimals;
+                        if (attrs.price_usd) tokenData.price_usd = parseFloat(attrs.price_usd);
+                        if (attrs.market_cap_usd) tokenData.market_cap_usd = parseFloat(attrs.market_cap_usd);
+                        if (attrs.volume_24h?.usd) tokenData.volume_24h_usd = parseFloat(attrs.volume_24h.usd);
+                        if (attrs.price_change_24h?.usd) tokenData.price_change_24h = parseFloat(attrs.price_change_24h.usd);
+                        if (attrs.price_change_percentage_24h?.usd) tokenData.price_change_percentage_24h = parseFloat(attrs.price_change_percentage_24h.usd);
+                        if (attrs.total_supply) tokenData.total_supply = parseFloat(attrs.total_supply);
+                        tokenData.image = attrs.image_url;
+                        tokenData.description = attrs.description;
+                        tokenData.last_updated = attrs.updated_at;
+
+                        console.log(`✅ Got comprehensive data for ${tokenData.symbol || tokenAddress}`);
+
+                        this.setCachedData(cacheKey, tokenData);
+                        return tokenData;
+                    }
+                } else {
+                    console.warn(`Onchain API failed with status ${response.status}, trying fallback`);
+                }
+            } catch (onchainError) {
+                console.warn('Onchain API failed, trying fallback:', onchainError);
+            }
+
+            // Fallback: Use known token mapping and coins API for detailed data
+            const coingeckoId = TokenRegistry.getCoinGeckoId(tokenAddress, network);
+
+            if (coingeckoId) {
+                try {
+                    // Use coins API for comprehensive token data
+                    const coinsUrl = `${this.baseUrl}/coins/${coingeckoId}?localization=false&tickers=false&market_data=true&community_data=false&developer_data=false&sparkline=false`;
+                    const headers: HeadersInit = { 'Accept': 'application/json' };
+
+                    if (this.apiKey) {
+                        headers[this.apiHeader] = this.apiKey;
+                    }
+
+                    const response = await fetch(coinsUrl, { headers });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        // Map CoinGecko coins API response to our TokenData interface
+                        tokenData.coingecko_id = data.id;
+                        tokenData.name = data.name;
+                        tokenData.symbol = data.symbol?.toUpperCase();
+                        tokenData.image = data.image?.large || data.image?.small;
+                        tokenData.description = data.description?.en;
+
+                        if (data.market_data) {
+                            const md = data.market_data;
+                            if (md.current_price?.usd) tokenData.price_usd = md.current_price.usd;
+                            if (md.market_cap?.usd) tokenData.market_cap_usd = md.market_cap.usd;
+                            if (md.total_volume?.usd) tokenData.volume_24h_usd = md.total_volume.usd;
+                            if (md.price_change_24h) tokenData.price_change_24h = md.price_change_24h;
+                            if (md.price_change_percentage_24h) tokenData.price_change_percentage_24h = md.price_change_percentage_24h;
+                            if (md.price_change_percentage_7d) tokenData.price_change_percentage_7d = md.price_change_percentage_7d;
+                            if (md.price_change_percentage_30d) tokenData.price_change_percentage_30d = md.price_change_percentage_30d;
+                            if (md.total_supply) tokenData.total_supply = md.total_supply;
+                            if (md.circulating_supply) tokenData.circulating_supply = md.circulating_supply;
+                            if (md.max_supply) tokenData.max_supply = md.max_supply;
+                            if (md.ath?.usd) tokenData.ath = md.ath.usd;
+                            if (md.ath_date?.usd) tokenData.ath_date = md.ath_date.usd;
+                            if (md.atl?.usd) tokenData.atl = md.atl.usd;
+                            if (md.atl_date?.usd) tokenData.atl_date = md.atl_date.usd;
+                            if (md.last_updated) tokenData.last_updated = md.last_updated;
+                        }
+
+                        console.log(`✅ Got fallback data for ${tokenData.symbol || coingeckoId}`);
+
+                        this.setCachedData(cacheKey, tokenData);
+                        return tokenData;
+                    }
+                } catch (fallbackError) {
+                    console.warn(`Failed to get token data for ${coingeckoId}:`, fallbackError);
+                }
+            }
+
+            // If we still don't have data, try to get at least the price
+            const price = await this.getTokenPrice(tokenAddress, network);
+            if (price > 0) {
+                tokenData.price_usd = price;
+
+                this.setCachedData(cacheKey, tokenData);
+                return tokenData;
+            }
+
+            // Return null if we couldn't get any data
+            console.warn(`No data found for token ${tokenAddress} on ${network}`);
+            return null;
+
+        } catch (error) {
+            console.error(`Error fetching token data for ${tokenAddress} on ${network}:`, error);
+            return null;
         }
     }
 
@@ -247,43 +409,18 @@ export class CoinGeckoAPIService implements CoinGeckoService {
         this.requestCache.clear();
     }
 
-    /**
-     * Returns list of stablecoin addresses that always have $1 price
-     */
-    private getStablecoinAddresses(): string[] {
-        return [
-            'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', // USDC
-            'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB'  // USDT
-        ];
-    }
 
-    /**
-     * Maps Solana mint addresses to CoinGecko token IDs
-     */
-    private getKnownTokenMapping(): Record<string, string> {
-        return {
-            'So11111111111111111111111111111111111111112': 'solana', // SOL
-            'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v': 'usd-coin', // USDC
-            'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB': 'tether', // USDT
-            '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R': 'raydium', // RAY
-            'SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt': 'serum', // SRM
-            'MangoCzJ36AjZyKwVj3VnYU4GTonjfVEnJmvvWaxLac': 'mango-markets', // MNGO
-            'orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE': 'orca', // ORCA
-            'StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT': 'step-finance', // STEP
-            'CopEFkRzkYgfYKFVLWdgELNNFyNVdWE1jVgVjdJMYFSX': 'cope', // COPE
-            '7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj': 'samoyedcoin', // SAMO
-            'EchesyfXePKdLtoiZSL8pBe8Myagyy8ZRqsACNCFGnvp': 'bonfida', // FIDA
-            'kinXdEcpDQeHPEuQnqmUgtYykqKGVFq6CeVX5iAHJq6': 'kin' // KIN
-        };
-    }
 
     /**
      * Batch request optimization - splits large requests into smaller chunks
      * Note: The onchain API supports multiple addresses in a single request
+     * @param tokenAddresses - Array of token addresses
+     * @param batchSize - Number of addresses per batch
+     * @param network - Blockchain network (default: 'solana')
      */
-    async getTokenPricesBatch(tokenAddresses: string[], batchSize: number = 30): Promise<Record<string, number>> {
+    async getTokenPricesBatch(tokenAddresses: string[], batchSize: number = 30, network: string = 'solana'): Promise<Record<string, number>> {
         if (tokenAddresses.length <= batchSize) {
-            return this.getTokenPrices(tokenAddresses);
+            return this.getTokenPrices(tokenAddresses, network);
         }
 
         const batches: string[][] = [];
@@ -295,7 +432,7 @@ export class CoinGeckoAPIService implements CoinGeckoService {
 
         for (const batch of batches) {
             try {
-                const batchResults = await this.getTokenPrices(batch);
+                const batchResults = await this.getTokenPrices(batch, network);
                 Object.assign(results, batchResults);
 
                 // Add small delay between batches to respect rate limits
