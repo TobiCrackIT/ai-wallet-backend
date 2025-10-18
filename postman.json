@@ -375,6 +375,122 @@
                         "description": "Validate if a query is appropriate and safe for processing"
                     },
                     "response": []
+                },
+                {
+                    "name": "Blockchain Market Query - Trending",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"blockchain\": \"solana\",\n  \"query\": \"What are the trending tokens on Solana today?\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/market",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "market"
+                            ]
+                        },
+                        "description": "Get AI-powered market analysis for trending tokens and market overview"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Base Network Token Info",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"blockchain\": \"base\",\n  \"query\": \"Tell me about DEGEN token - what's the price, market cap, and contract address?\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/market",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "market"
+                            ]
+                        },
+                        "description": "Get detailed information about specific tokens including contract addresses"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "SOL Price and Performance",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"blockchain\": \"solana\",\n  \"query\": \"What's the current price of SOL and how has it performed in the last 24 hours?\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/market",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "market"
+                            ]
+                        },
+                        "description": "Get current price and performance data for SOL token"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Base Ecosystem Overview",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"blockchain\": \"base\",\n  \"query\": \"Give me an overview of the Base ecosystem - what are the top tokens and their prices?\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/market",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "market"
+                            ]
+                        },
+                        "description": "Get comprehensive overview of Base network tokens and ecosystem"
+                    },
+                    "response": []
                 }
             ],
             "description": "AI-related API endpoints using OpenAI service"

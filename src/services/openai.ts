@@ -4,6 +4,8 @@
  */
 
 import type { OpenAIService, ConversationContext, ConversationMessage, AIResponse, WalletData } from '../types/index.js';
+import { CoinGeckoAPIService } from './coingecko.js';
+import { TokenRegistry } from './tokenRegistry.js';
 
 export class OpenAIAPIService implements OpenAIService {
     private readonly apiKey: string;
@@ -129,7 +131,7 @@ export class OpenAIAPIService implements OpenAIService {
     private createSystemPrompt(walletData: WalletData): string {
         const { address, balance, tokens, transactions, analytics } = walletData;
 
-        return `You are Coinrade, an AI assistant specialized in analyzing Solana blockchain wallet data. 
+        return `You are Rodeo, an AI assistant specialized in analyzing Solana blockchain wallet data. 
 You help users understand their wallet information in simple, human-friendly terms.
 
 Current wallet being analyzed: ${address}
@@ -215,6 +217,256 @@ Remember: You're helping users understand their Solana wallet data. Be accurate,
             sources: ['Fallback Response'],
             timestamp: Date.now()
         };
+    }
+
+    /**
+     * Processes blockchain market queries for trending tokens, gainers/losers, and token information
+     * @param blockchain - The blockchain network (e.g., 'solana', 'base', 'ethereum')
+     * @param query - Natural language query about market data
+     * @returns Natural language response with market information
+     */
+    async processBlockchainMarketQuery(blockchain: string, query: string): Promise<string> {
+        if (!this.apiKey) {
+            return this.createMarketFallbackResponse(blockchain, query);
+        }
+
+        try {
+            // Validate the query first
+            const validation = this.validateQuery(query);
+            if (!validation.isValid) {
+                throw new Error(validation.reason || 'Invalid query');
+            }
+
+            // Initialize CoinGecko service
+            const coinGeckoService = new CoinGeckoAPIService();
+
+            // Gather market data based on the query type
+            const marketData = await this.gatherMarketData(blockchain, query, coinGeckoService);
+
+            // Create system prompt for market analysis
+            const systemPrompt = this.createMarketSystemPrompt(blockchain, marketData);
+
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: query }
+            ];
+
+            const response = await fetch(`${this.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages,
+                    max_tokens: this.maxTokens,
+                    temperature: this.temperature
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`OpenAI API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.choices || data.choices.length === 0) {
+                throw new Error('No response generated');
+            }
+
+            return data.choices[0].message.content.trim();
+
+        } catch (error) {
+            console.error('Error processing blockchain market query:', error);
+            return this.createMarketFallbackResponse(blockchain, query);
+        }
+    }
+
+    /**
+     * Gathers relevant market data based on the query type
+     */
+    private async gatherMarketData(blockchain: string, query: string, coinGeckoService: CoinGeckoAPIService): Promise<any> {
+        const marketData: any = {
+            blockchain: blockchain.toLowerCase(),
+            supportedNetworks: TokenRegistry.getSupportedNetworks(),
+            knownTokens: {},
+            tokenPrices: {},
+            timestamp: new Date().toISOString()
+        };
+
+        try {
+            // Get known tokens for the blockchain
+            const knownTokenMapping = TokenRegistry.getKnownTokenMapping(blockchain);
+            const tokenAddresses = Object.keys(knownTokenMapping);
+
+            if (tokenAddresses.length > 0) {
+                // Get prices for known tokens (limit to first 10 for performance)
+                const limitedAddresses = tokenAddresses.slice(0, 10);
+                const prices = await coinGeckoService.getTokenPrices(limitedAddresses, blockchain);
+
+                marketData.knownTokens = knownTokenMapping;
+                marketData.tokenPrices = prices;
+
+                // If query mentions specific token, get detailed data
+                const specificTokenMatch = this.extractTokenFromQuery(query, knownTokenMapping);
+                if (specificTokenMatch) {
+                    const tokenData = await coinGeckoService.getTokenData(specificTokenMatch.address, blockchain);
+                    if (tokenData) {
+                        marketData.specificToken = {
+                            address: specificTokenMatch.address,
+                            symbol: specificTokenMatch.symbol,
+                            data: tokenData
+                        };
+                    }
+                }
+            }
+
+            // Get stablecoin info
+            marketData.stablecoins = TokenRegistry.getStablecoinMetadata(blockchain);
+
+        } catch (error) {
+            console.warn('Error gathering market data:', error);
+            // Continue with partial data
+        }
+
+        return marketData;
+    }
+
+    /**
+     * Extracts token information from user query
+     */
+    private extractTokenFromQuery(query: string, knownTokens: Record<string, string>): { address: string; symbol: string } | null {
+        const queryLower = query.toLowerCase();
+
+        // Check for token symbols or names in the query
+        for (const [address, coingeckoId] of Object.entries(knownTokens)) {
+            // Common token symbols
+            const tokenSymbols: Record<string, string> = {
+                'solana': 'sol',
+                'usd-coin': 'usdc',
+                'tether': 'usdt',
+                'ethereum': 'eth',
+                'raydium': 'ray',
+                'orca': 'orca',
+                'degen-base': 'degen',
+                'brett': 'brett',
+                'higher': 'higher'
+            };
+
+            const symbol = tokenSymbols[coingeckoId] || coingeckoId;
+
+            if (queryLower.includes(symbol) || queryLower.includes(coingeckoId)) {
+                return { address, symbol: symbol.toUpperCase() };
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates system prompt for market analysis
+     */
+    private createMarketSystemPrompt(blockchain: string, marketData: any): string {
+        const { knownTokens, tokenPrices, stablecoins, specificToken } = marketData;
+
+        let prompt = `You are Rodeo, an AI assistant specialized in blockchain market analysis and cryptocurrency data.
+
+Current Analysis Context:
+- Blockchain: ${blockchain.charAt(0).toUpperCase() + blockchain.slice(1)}
+- Supported Networks: ${marketData.supportedNetworks.join(', ')}
+- Analysis Time: ${marketData.timestamp}
+
+`;
+
+        // Add known tokens information
+        if (Object.keys(knownTokens).length > 0) {
+            prompt += `Known Tokens on ${blockchain}:\n`;
+            let tokenCount = 0;
+            for (const [address, coingeckoId] of Object.entries(knownTokens)) {
+                if (tokenCount >= 10) break; // Limit for prompt size
+                const price = tokenPrices[address];
+                const priceStr = price ? `$${price.toFixed(4)}` : 'Price unavailable';
+                prompt += `- ${coingeckoId}: ${priceStr} (${address.substring(0, 8)}...)\n`;
+                tokenCount++;
+            }
+            prompt += '\n';
+        }
+
+        // Add stablecoin information
+        if (stablecoins && stablecoins.length > 0) {
+            prompt += `Stablecoins on ${blockchain}:\n`;
+            stablecoins.forEach((stable: { address: string; symbol: string; name: string; decimals: number }) => {
+                prompt += `- ${stable.symbol}: $1.00 (${stable.name})\n`;
+            });
+            prompt += '\n';
+        }
+
+        // Add specific token data if available
+        if (specificToken) {
+            const token = specificToken.data;
+            prompt += `Detailed Token Information for ${specificToken.symbol}:\n`;
+            prompt += `- Name: ${token.name || 'N/A'}\n`;
+            prompt += `- Symbol: ${token.symbol || 'N/A'}\n`;
+            prompt += `- Price: $${token.price_usd || 'N/A'}\n`;
+            prompt += `- Market Cap: $${token.market_cap_usd ? token.market_cap_usd.toLocaleString() : 'N/A'}\n`;
+            prompt += `- 24h Change: ${token.price_change_percentage_24h ? token.price_change_percentage_24h.toFixed(2) + '%' : 'N/A'}\n`;
+            prompt += `- Volume 24h: $${token.volume_24h_usd ? token.volume_24h_usd.toLocaleString() : 'N/A'}\n`;
+            prompt += `- Contract: ${specificToken.address}\n\n`;
+        }
+
+        prompt += `Guidelines for Market Analysis Responses:
+1. Provide accurate, data-driven insights based on the available information
+2. Use clear, friendly language that both beginners and experts can understand
+3. When discussing prices, mention they are current estimates and can change rapidly
+4. Format numbers clearly (e.g., $1,234.56 or 1,234.56%)
+5. Include contract addresses when relevant for verification
+6. Explain market concepts when necessary (market cap, volume, etc.)
+7. Be honest about data limitations - if information isn't available, say so
+8. Focus on factual information rather than investment advice
+9. Use emojis sparingly but effectively for readability
+10. Provide context about the blockchain ecosystem when relevant
+
+Remember: You're helping users understand cryptocurrency market data. Be accurate, helpful, and educational while avoiding financial advice.`;
+
+        return prompt;
+    }
+
+    /**
+     * Creates a fallback response for market queries when AI is unavailable
+     */
+    private createMarketFallbackResponse(blockchain: string, query: string): string {
+        const knownTokens = TokenRegistry.getKnownTokenMapping(blockchain);
+        const stablecoins = TokenRegistry.getStablecoinMetadata(blockchain);
+
+        let response = `I'm currently unable to process your market query with AI analysis, but here's what I can tell you about ${blockchain}:\n\n`;
+
+        response += `📊 **${blockchain.charAt(0).toUpperCase() + blockchain.slice(1)} Network Overview:**\n`;
+        response += `• Known Tokens: ${Object.keys(knownTokens).length}\n`;
+        response += `• Stablecoins: ${stablecoins.length}\n`;
+        response += `• Network Status: Supported\n\n`;
+
+        if (Object.keys(knownTokens).length > 0) {
+            response += `🪙 **Popular Tokens:**\n`;
+            const tokenEntries = Object.entries(knownTokens).slice(0, 5);
+            tokenEntries.forEach(([address, coingeckoId]) => {
+                response += `• ${coingeckoId} (${address.substring(0, 8)}...)\n`;
+            });
+            response += '\n';
+        }
+
+        if (stablecoins.length > 0) {
+            response += `💰 **Stablecoins:**\n`;
+            stablecoins.forEach((stable: { address: string; symbol: string; name: string; decimals: number }) => {
+                response += `• ${stable.symbol}: ${stable.name}\n`;
+            });
+            response += '\n';
+        }
+
+        response += `For real-time prices and detailed market data, please try your question again in a moment.\n`;
+        response += `You can ask about specific tokens, trending tokens, or market performance on ${blockchain}.`;
+
+        return response;
     }
 
     /**

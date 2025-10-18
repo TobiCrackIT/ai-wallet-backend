@@ -21,6 +21,8 @@ export interface Transaction {
     involvedAddresses: string[];
 }
 
+
+
 export interface WalletAnalytics {
     totalValue: number;
     transactionCount: number;
@@ -36,6 +38,17 @@ export interface WalletData {
     transactions: Transaction[];
     analytics: WalletAnalytics;
     solPriceUSD?: number;
+}
+
+export interface WalletActivity{
+    type: TransactionType;
+    fromAddress?: string;
+    toAddress?:string;
+    fromTokenAddress?: string;
+    toTokenAddress?:string;
+    fromAmount?:number;
+    usdValue?:number;
+    nativeValue?:number;
 }
 
 export type TransactionType =

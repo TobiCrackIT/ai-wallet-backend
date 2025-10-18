@@ -26,6 +26,7 @@ export interface OpenAIService {
     generateResponse(prompt: string, walletData: WalletData): Promise<string>;
     maintainConversationContext(messages: ConversationMessage[]): ConversationContext;
     processNaturalLanguageQuery(query: string, context: ConversationContext): Promise<AIResponse>;
+    processBlockchainMarketQuery(blockchain: string, query: string): Promise<string>;
 }
 
 // Supporting API Types

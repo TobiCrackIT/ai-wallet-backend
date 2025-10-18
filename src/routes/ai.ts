@@ -122,5 +122,41 @@ export function createAIRoutes(): Router {
         }
     });
 
+    // Process blockchain market query
+    router.post('/market', async (req, res) => {
+        try {
+            const { blockchain, query } = req.body;
+
+            if (!blockchain || !query) {
+                return res.status(400).json({
+                    error: 'Missing required fields: blockchain and query'
+                });
+            }
+
+            // Validate query first
+            const validation = openAIService.validateQuery(query);
+            if (!validation.isValid) {
+                return res.status(400).json({
+                    error: validation.reason || 'Invalid query'
+                });
+            }
+
+            const response = await openAIService.processBlockchainMarketQuery(blockchain, query);
+
+            res.json({
+                response,
+                blockchain,
+                query,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error processing blockchain market query:', error);
+            res.status(500).json({
+                error: 'Failed to process market query',
+                response: `I'm currently unable to process market queries for ${req.body.blockchain || 'this blockchain'}. Please try again later.`
+            });
+        }
+    });
+
     return router;
 }
