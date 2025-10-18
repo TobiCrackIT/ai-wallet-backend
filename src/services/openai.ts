@@ -370,7 +370,7 @@ Remember: You're helping users understand their Solana wallet data. Be accurate,
     private createMarketSystemPrompt(blockchain: string, marketData: any): string {
         const { knownTokens, tokenPrices, stablecoins, specificToken } = marketData;
 
-        let prompt = `You are Rodeo, an AI assistant specialized in blockchain market analysis and cryptocurrency data.
+        let prompt = `You are Rodeo, an AI assistant specialized in real-time blockchain market analysis and cryptocurrency data for ${blockchain} blockchain.
 
 Current Analysis Context:
 - Blockchain: ${blockchain.charAt(0).toUpperCase() + blockchain.slice(1)}
@@ -420,7 +420,7 @@ Current Analysis Context:
 2. Use clear, friendly language that both beginners and experts can understand
 3. When discussing prices, mention they are current estimates and can change rapidly
 4. Format numbers clearly (e.g., $1,234.56 or 1,234.56%)
-5. Include contract addresses when relevant for verification
+5. Include full contract addresses when requested or when relevant for verification
 6. Explain market concepts when necessary (market cap, volume, etc.)
 7. Be honest about data limitations - if information isn't available, say so
 8. Focus on factual information rather than investment advice
