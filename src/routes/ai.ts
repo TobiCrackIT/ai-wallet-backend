@@ -158,5 +158,50 @@ export function createAIRoutes(): Router {
         }
     });
 
+    // Extract intent from natural language
+    router.post('/extract-intent', async (req, res) => {
+        try {
+            const { userInput } = req.body;
+
+            if (!userInput) {
+                return res.status(400).json({
+                    error: 'Missing required field: userInput'
+                });
+            }
+
+            // Validate input first
+            const validation = openAIService.validateQuery(userInput);
+            if (!validation.isValid) {
+                return res.status(400).json({
+                    error: validation.reason || 'Invalid input'
+                });
+            }
+
+            const intentData = await openAIService.extractIntent(userInput);
+
+            res.json({
+                ...intentData,
+                userInput,
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error('Error extracting intent:', error);
+            res.status(500).json({
+                error: 'Failed to extract intent',
+                intent: 'other',
+                parameters: {
+                    token_symbol: null,
+                    amount: null,
+                    recipient: null,
+                    network: 'base',
+                    contract_address: null,
+                    method: null
+                },
+                confidence: 0.1,
+                missing_info: ['Service temporarily unavailable']
+            });
+        }
+    });
+
     return router;
 }

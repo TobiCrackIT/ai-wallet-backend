@@ -27,6 +27,7 @@ export interface OpenAIService {
     maintainConversationContext(messages: ConversationMessage[]): ConversationContext;
     processNaturalLanguageQuery(query: string, context: ConversationContext): Promise<AIResponse>;
     processBlockchainMarketQuery(blockchain: string, query: string): Promise<string>;
+    extractIntent(userInput: string): Promise<any>;
 }
 
 // Supporting API Types

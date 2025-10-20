@@ -301,17 +301,17 @@ Remember: You're helping users understand their Solana wallet data. Be accurate,
             const tokenAddresses = Object.keys(knownTokenMapping);
 
             if (tokenAddresses.length > 0) {
-                // Get prices for known tokens (limit to first 10 for performance)
-                const limitedAddresses = tokenAddresses.slice(0, 10);
-                const prices = await coinGeckoService.getTokenPrices(limitedAddresses, blockchain);
-
-                marketData.knownTokens = knownTokenMapping;
-                marketData.tokenPrices = prices;
-
-                // If query mentions specific token, get detailed data
+                // Check if query mentions a specific token
                 const specificTokenMatch = this.extractTokenFromQuery(query, knownTokenMapping);
+
                 if (specificTokenMatch) {
+                    // If specific token mentioned, only fetch data for that token
                     const tokenData = await coinGeckoService.getTokenData(specificTokenMatch.address, blockchain);
+                    const singleTokenPrice = await coinGeckoService.getTokenPrice(specificTokenMatch.address, blockchain);
+
+                    marketData.knownTokens = { [specificTokenMatch.address]: knownTokenMapping[specificTokenMatch.address] };
+                    marketData.tokenPrices = { [specificTokenMatch.address]: singleTokenPrice };
+
                     if (tokenData) {
                         marketData.specificToken = {
                             address: specificTokenMatch.address,
@@ -319,6 +319,13 @@ Remember: You're helping users understand their Solana wallet data. Be accurate,
                             data: tokenData
                         };
                     }
+                } else {
+                    // If no specific token mentioned, get overview data (limit to first 8 for performance)
+                    const limitedAddresses = tokenAddresses.slice(0, 8);
+                    const prices = await coinGeckoService.getTokenPrices(limitedAddresses, blockchain);
+
+                    marketData.knownTokens = knownTokenMapping;
+                    marketData.tokenPrices = prices;
                 }
             }
 
@@ -467,6 +474,168 @@ Remember: You're helping users understand cryptocurrency market data. Be accurat
         response += `You can ask about specific tokens, trending tokens, or market performance on ${blockchain}.`;
 
         return response;
+    }
+
+    /**
+     * Extracts intent and parameters from natural language using AI
+     * @param userInput - Natural language command from user
+     * @returns Structured transaction data with intent, parameters, and missing info
+     */
+    async extractIntent(userInput: string): Promise<any> {
+        if (!this.apiKey) {
+            // Fallback when AI is unavailable
+            return {
+                intent: "other",
+                parameters: {
+                    token_symbol: null,
+                    amount: null,
+                    recipient: null,
+                    network: "base",
+                    contract_address: null,
+                    method: null
+                },
+                confidence: 0.1,
+                missing_info: ["AI service unavailable - please specify intent and parameters manually"]
+            };
+        }
+
+        try {
+            const systemPrompt = `You are an expert blockchain transaction parser for Base blockchain. Your task is to analyze natural-language commands and extract structured transaction data.
+
+---
+
+### GOAL
+Convert natural language input into a JSON object that describes:
+1. The **intent** (what the user wants to do)
+2. The **parameters** (token, amount, recipient, network, etc.)
+3. Any **ambiguities or missing information** that must be clarified before execution.
+
+---
+
+### SUPPORTED INTENTS
+Recognize these possible intents (case-insensitive):
+- send_token
+- check_balance
+- swap_token
+- bridge_token
+- approve_token
+- stake_token
+- unstake_token
+- get_price
+- wallet_address
+- get_gas
+- other (if unclear)
+
+---
+
+### OUTPUT FORMAT
+Always return **valid JSON** (no commentary, no Markdown).
+Use this schema:
+{
+  "intent": "string",
+  "parameters": {
+    "token_symbol": "string | null",
+    "amount": "string | null",
+    "recipient": "string | null",
+    "network": "string | null",
+    "contract_address": "string | null",
+    "method": "string | null",
+    "extra": "object (optional)"
+  },
+  "confidence": "float between 0 and 1",
+  "missing_info": ["list of unclear fields that user must specify"]
+}
+
+---
+
+### INSTRUCTIONS
+- Extract all entities explicitly mentioned in the text.
+- If the user says "my friend" or "that address", mark recipient as null and include in \`missing_info\`.
+- Normalize token names (e.g. "ethereum", "eth", "Ether" → "ETH").
+- Normalize networks (e.g. "Polygon", "Matic" → "polygon").
+- For ambiguous numeric expressions like "a few", "half", "all", mark \`amount=null\` and add to \`missing_info\`.
+- Confidence should reflect how sure you are about the parsed result.
+- Never make up addresses or amounts.`;
+
+            const messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userInput }
+            ];
+
+            const response = await fetch(`${this.baseUrl}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    model: this.model,
+                    messages,
+                    max_tokens: 500, // Reduced for structured output
+                    temperature: 0.1 // Low temperature for consistent parsing
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`OpenAI API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.choices || data.choices.length === 0) {
+                throw new Error('No response generated');
+            }
+
+            const content = data.choices[0].message.content.trim();
+
+            try {
+                // Parse the JSON response
+                const parsedIntent = JSON.parse(content);
+
+                // Validate the structure
+                if (!parsedIntent.intent || !parsedIntent.parameters || !parsedIntent.confidence) {
+                    throw new Error('Invalid response structure');
+                }
+
+                return parsedIntent;
+
+            } catch (parseError) {
+                console.error('Failed to parse AI response as JSON:', content);
+
+                // Return fallback structure
+                return {
+                    intent: "other",
+                    parameters: {
+                        token_symbol: null,
+                        amount: null,
+                        recipient: null,
+                        network: "base",
+                        contract_address: null,
+                        method: null
+                    },
+                    confidence: 0.2,
+                    missing_info: ["Failed to parse intent - please clarify your request"]
+                };
+            }
+
+        } catch (error) {
+            console.error('Error extracting intent:', error);
+
+            // Return fallback structure
+            return {
+                intent: "other",
+                parameters: {
+                    token_symbol: null,
+                    amount: null,
+                    recipient: null,
+                    network: "base",
+                    contract_address: null,
+                    method: null
+                },
+                confidence: 0.1,
+                missing_info: ["Error processing request - please try again"]
+            };
+        }
     }
 
     /**

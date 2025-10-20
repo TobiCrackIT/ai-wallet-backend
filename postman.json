@@ -491,6 +491,122 @@
                         "description": "Get comprehensive overview of Base network tokens and ecosystem"
                     },
                     "response": []
+                },
+                {
+                    "name": "Extract Intent - Send Token",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userInput\": \"Send 100 USDC to 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/extract-intent",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "extract-intent"
+                            ]
+                        },
+                        "description": "Extract intent and parameters from send token command"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Extract Intent - Check Balance",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userInput\": \"What's my ETH balance?\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/extract-intent",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "extract-intent"
+                            ]
+                        },
+                        "description": "Extract intent from balance check query"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Extract Intent - Swap Tokens",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userInput\": \"Swap 50 DEGEN for ETH on Base\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/extract-intent",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "extract-intent"
+                            ]
+                        },
+                        "description": "Extract intent from token swap command"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Extract Intent - Ambiguous Command",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"userInput\": \"Send some tokens to my friend\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ai/extract-intent",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ai",
+                                "extract-intent"
+                            ]
+                        },
+                        "description": "Test intent extraction with ambiguous parameters"
+                    },
+                    "response": []
                 }
             ],
             "description": "AI-related API endpoints using OpenAI service"
