@@ -1,6 +1,6 @@
-# Coinrade AI Wallet Assistant - Backend
+# Rodeo AI Wallet Assistant - Backend
 
-Backend services for the Coinrade AI Wallet Assistant application.
+Backend services for the Rodeo AI Wallet Assistant application.
 
 ## Features
 
