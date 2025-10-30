@@ -84,7 +84,9 @@ export class OpenAIAPIService implements OpenAIService {
     async processNaturalLanguageQuery(query: string, context: ConversationContext): Promise<AIResponse> {
         try {
             const enhancedPrompt = this.enhancePromptWithContext(query, context);
-            const response = await this.generateResponse(enhancedPrompt, context.walletDataSnapshot);
+            const walletData = (context && context.walletDataSnapshot) ? context.walletDataSnapshot : {} as WalletData;
+
+            const response = await this.generateResponse(enhancedPrompt, walletData);
 
             return {
                 content: response,
