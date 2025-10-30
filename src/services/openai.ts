@@ -132,6 +132,12 @@ export class OpenAIAPIService implements OpenAIService {
      */
     private createSystemPrompt(walletData: WalletData): string {
         const { address, balance, tokens, transactions, analytics } = walletData;
+        let emptyObject = Object.values(walletData).every(v => v == null || v == undefined || v == '');
+
+        if (emptyObject) {
+            return `You are Rodeo, an AI assistant specialized in analyzing Solana blockchain wallet data. 
+You help users understand their wallet information in simple, human-friendly terms.`;
+        }
 
         return `You are Rodeo, an AI assistant specialized in analyzing Solana blockchain wallet data. 
 You help users understand their wallet information in simple, human-friendly terms.
