@@ -57,8 +57,8 @@ app.use('*', (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Backend server running on port ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health`);
-    console.log(`💰 Price API: http://localhost:${PORT}/api/prices`);
-    console.log(`🔗 Wallet API: http://localhost:${PORT}/api/wallet`);
-    console.log(`🤖 AI API: http://localhost:${PORT}/api/ai`);
+    console.log(`📊 Health check: https://ai-wallet-backend.onrender.com/health`);
+    console.log(`💰 Price API: https://ai-wallet-backend.onrender.com/api/prices`);
+    console.log(`🔗 Wallet API: https://ai-wallet-backend.onrender.com/api/wallet`);
+    console.log(`🤖 AI API: https://ai-wallet-backend.onrender.com/api/ai`);
 });
