@@ -173,7 +173,7 @@ Remember: You're helping users understand their Solana wallet data. Be accurate,
         let enhancedPrompt = query;
 
         // Add context from previous queries if available
-        if (context.previousQueries.length > 0) {
+        if (context.previousQueries && context.previousQueries.length > 0) {
             const recentQueries = context.previousQueries.slice(-3); // Last 3 queries
             enhancedPrompt += `\n\nContext from recent conversation:`;
             recentQueries.forEach((prevQuery, index) => {
